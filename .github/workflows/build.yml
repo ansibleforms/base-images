@@ -18,11 +18,12 @@ on:
   pull_request:
   push:
     branches: [main]
-    # Only changes that alter an image publish it; documentation next to it does not.
+    # Only changes that alter an image publish it. Documentation next to it does not, and
+    # neither does a change to this workflow: a pull request already builds with it, and
+    # publishing an unchanged image would only start a pointless pin update in the app.
     paths:
       - 'base-server/**'
       - '!base-server/**/*.md'
-      - '.github/workflows/build.yml'
   workflow_dispatch:
 
 permissions:
