@@ -1,0 +1,55 @@
+# The base of the AnsibleForms server image: the OS, Node.js, Python with the libraries
+# playbooks commonly need, Ansible with a set of Galaxy collections, and the tools the
+# server calls (git, ssh, the MariaDB client, ytt). The AnsibleForms image adds only the
+# application on top, which keeps its builds fast.
+#
+# node:24-bookworm-slim is pinned to its major on purpose: node:lts would move to the next
+# major without a commit here. Dependabot proposes updates within the major.
+FROM node:24-bookworm-slim
+
+# Use /app as CWD
+WORKDIR /app
+
+# Update package lists and install packages
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-venv \
+    python3-ldap \
+    libxslt1.1 \
+    curl \
+    tzdata \
+    mariadb-client \
+    libmariadb3 \
+    openssh-client \
+    sshpass \
+    git \
+    vim \
+    wget \
+    sudo \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install ytt (try curl as backup if wget fails)
+RUN (wget -O /bin/ytt https://github.com/vmware-tanzu/carvel-ytt/releases/download/v0.52.1/ytt-linux-amd64 || \
+     curl -L -o /bin/ytt https://github.com/vmware-tanzu/carvel-ytt/releases/download/v0.52.1/ytt-linux-amd64) && \
+    chmod +x /bin/ytt
+
+# Create and activate a virtual environment
+RUN python3 -m venv /venv
+ENV PATH="/venv/bin:$PATH"
+RUN pip install --upgrade pip
+
+# Install Python packages in the venv
+RUN pip install pandas PyYAML openpyxl hvac pyVim pyvmomi jinja2 requests six PyMySQL netapp_lib netapp_ontap solidfire-sdk-python boto3 boto botocore lxml ansible paramiko colorama beautifulsoup4
+
+# Install Ansible collections
+RUN ansible-galaxy collection install netapp.ontap --upgrade --force -p /usr/share/ansible/collections \
+    && ansible-galaxy collection install netapp.elementsw --upgrade --force -p /usr/share/ansible/collections \
+    && ansible-galaxy collection install netapp.um_info --upgrade --force -p /usr/share/ansible/collections \
+    && ansible-galaxy collection install amazon.aws --upgrade --force -p /usr/share/ansible/collections \
+    && ansible-galaxy collection install netapp.storagegrid --upgrade --force -p /usr/share/ansible/collections \
+    && ansible-galaxy collection install community.general --upgrade --force -p /usr/share/ansible/collections \
+    && ansible-galaxy collection install community.mysql --upgrade --force -p /usr/share/ansible/collections
+
+# Create root .ssh directory
+RUN mkdir -p ~/.ssh

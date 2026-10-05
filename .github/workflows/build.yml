@@ -1,0 +1,95 @@
+name: Build
+
+# Builds the images in this repository. A pull request builds them without pushing, so a
+# broken Dockerfile fails there. A merge to main that touches an image builds it and
+# pushes it to ghcr.io/ansibleforms/<image>; Actions -> Build -> Run workflow rebuilds it
+# on demand, for example to pick up fresh OS and Python packages.
+#
+# The images are versioned by build date, never by the AnsibleForms version:
+#   <date>   e.g. 2026.10.05 (a second build on the same day gets -<run number>)
+#   latest
+#
+# The AnsibleForms Dockerfile pins base-server by digest, so publishing here changes
+# nothing by itself. Dependabot in ansibleforms/ansibleforms notices the new digest behind
+# latest and opens a pull request that moves the pin; that is where an update is built,
+# tested and released.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    paths:
+      - 'base-server/**'
+      - '.github/workflows/build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: build-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  base-server:
+    name: Build base-server
+    runs-on: ubuntu-latest
+    env:
+      IMAGE: ghcr.io/${{ github.repository_owner }}/base-server
+      PUSH: ${{ github.event_name != 'pull_request' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GHCR
+        if: env.PUSH == 'true'
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Work out the tags
+        id: tags
+        run: |
+          date=$(date -u +%Y.%m.%d)
+          # Immutable per build: a second build on the same day must not overwrite the first.
+          if [ "$PUSH" = "true" ] && docker manifest inspect "$IMAGE:$date" >/dev/null 2>&1; then
+            date="$date-${{ github.run_number }}"
+          fi
+          echo "date=$date" >> "$GITHUB_OUTPUT"
+          echo "list=$IMAGE:$date,$IMAGE:latest" >> "$GITHUB_OUTPUT"
+
+      # No cache when publishing: the point of a rebuild is fresh packages. The source
+      # label links the package on ghcr.io to this repository.
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@v7
+        with:
+          context: base-server
+          platforms: linux/amd64
+          push: ${{ env.PUSH == 'true' }}
+          no-cache: ${{ env.PUSH == 'true' }}
+          tags: ${{ steps.tags.outputs.list }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.title=base-server
+            org.opencontainers.image.description=Base of the AnsibleForms server image: Node.js, Python, Ansible and tools
+            org.opencontainers.image.licenses=GPL-3.0
+            org.opencontainers.image.version=${{ steps.tags.outputs.date }}
+            org.opencontainers.image.revision=${{ github.sha }}
+
+      - name: Summary
+        if: env.PUSH == 'true'
+        run: |
+          {
+            echo "### base-server ${{ steps.tags.outputs.date }}"
+            echo ""
+            echo '```'
+            echo "${{ steps.tags.outputs.list }}" | tr ',' '\n'
+            echo '```'
+            echo ""
+            echo "Digest \`${{ steps.build.outputs.digest }}\`. Dependabot in ansibleforms/ansibleforms proposes the pin update."
+          } >> "$GITHUB_STEP_SUMMARY"

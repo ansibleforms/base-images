@@ -1,0 +1,25 @@
+version: 2
+
+# Every dependency gets its own pull request, never grouped, so each one can be reviewed and
+# reverted on its own. The pull request builds the image.
+
+updates:
+  # The FROM line of base-server. node stays on its major: moving Node.js to a new major is
+  # a decision for the AnsibleForms application, not a routine update.
+  - package-ecosystem: docker
+    directory: /base-server
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: build
+      include: scope
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
