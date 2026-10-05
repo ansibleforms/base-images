@@ -18,8 +18,10 @@ on:
   pull_request:
   push:
     branches: [main]
+    # Only changes that alter an image publish it; documentation next to it does not.
     paths:
       - 'base-server/**'
+      - '!base-server/**/*.md'
       - '.github/workflows/build.yml'
   workflow_dispatch:
 
