@@ -19,7 +19,7 @@ Each image has a directory of its own, named after the image it publishes.
 
 | Directory | Publishes | Holds |
 |---|---|---|
-| `base-server/` | `ghcr.io/ansibleforms/base-server` | Node.js, Python with common playbook libraries, Ansible and its collections, and the tools the server calls |
+| `base-server/` | `ghcr.io/ansibleforms/base-server` | Node.js, Python with common playbook libraries, Ansible and its collections, and the tools the server calls; its README lists everything in it |
 | `.github/workflows/build.yml` | | builds every image on a pull request, and builds and publishes on `main` |
 
 ---

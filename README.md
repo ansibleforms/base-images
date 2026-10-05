@@ -8,11 +8,11 @@ build in minutes.
 
 | Image | Directory | Used by |
 |---|---|---|
-| `ghcr.io/ansibleforms/base-server` | [base-server](base-server) | the AnsibleForms server image, `ghcr.io/ansibleforms/ansibleforms` |
+| `ghcr.io/ansibleforms/base-server` | [base-server](base-server), whose README lists everything in it | the AnsibleForms server image, `ghcr.io/ansibleforms/ansibleforms` |
 
 ### base-server
 
-Debian with Node.js 24, a Python virtual environment with the libraries playbooks commonly
+Debian with Node.js, a Python virtual environment with the libraries playbooks commonly
 need (pandas, PyMySQL, boto3, pyvmomi, the NetApp libraries and more), Ansible with a set of
 Galaxy collections (NetApp, Amazon AWS, community.general, community.mysql), and the tools
 the server calls: git, ssh, sshpass, the MariaDB client and ytt.
@@ -23,7 +23,7 @@ The images are versioned by build date, independently of AnsibleForms:
 
 | Tag | Points to |
 |---|---|
-| `2026.10.05` | the build of that day (a second build on the same day gets `-<run number>`) |
+| `<yyyy.mm.dd>` | the build of that day (a second build on the same day gets `-<run number>`) |
 | `latest` | the newest build |
 
 ## How an image is built and used
