@@ -73,6 +73,9 @@ jobs:
           context: base-server
           platforms: linux/amd64
           push: ${{ env.PUSH == 'true' }}
+          # A pull request build is only there to prove the image builds: declare it cache-only,
+          # or buildx warns that the result goes nowhere.
+          outputs: ${{ env.PUSH != 'true' && 'type=cacheonly' || '' }}
           no-cache: ${{ env.PUSH == 'true' }}
           tags: ${{ steps.tags.outputs.list }}
           labels: |
