@@ -42,7 +42,7 @@ An image only reaches AnsibleForms after it has been built, published and then t
 
 ## Contributing
 
-Contributions are welcome, for example a Python library or an Ansible collection added to an image's `Dockerfile`. Start with these files:
+Contributions are welcome. Start with these files:
 
 - [CONTRIBUTING.md](CONTRIBUTING.md): how to change an image and open a pull request against `main`
 - [SECURITY.md](SECURITY.md): how to report a security issue
