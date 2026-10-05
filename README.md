@@ -10,16 +10,18 @@ How to run AnsibleForms, and everything else about it, is documented at [ansible
 
 ## Images
 
-Each image lives in its own directory, with a README that lists everything in it.
+Each image is published as `ghcr.io/ansibleforms/<name>`, with a README in its directory listing everything in it.
 
-| Image | Directory | Used by |
-|---|---|---|
-| `ghcr.io/ansibleforms/base-server` | [base-server](base-server) | the AnsibleForms server image, `ghcr.io/ansibleforms/ansibleforms` |
+| Image | Base for |
+|---|---|
+| [`base-server`](base-server) | `ghcr.io/ansibleforms/ansibleforms` |
 
-`base-server` is Debian with Node.js, a Python virtual environment with the libraries playbooks commonly need
-(pandas, PyMySQL, boto3, pyvmomi, the NetApp libraries and more), Ansible with a set of Galaxy collections
-(NetApp, Amazon AWS, community.general, community.mysql), and the tools the server calls: git, ssh, sshpass,
-the MariaDB client and ytt.
+`base-server` is Debian with everything the server and its playbooks need:
+
+- Node.js
+- A Python virtual environment with pandas, PyMySQL, boto3, pyvmomi, the NetApp libraries and more
+- Ansible with Galaxy collections for NetApp, Amazon AWS, community.general and community.mysql
+- The tools the server calls: git, ssh, sshpass, the MariaDB client and ytt
 
 ## Tags
 
@@ -35,15 +37,12 @@ The images are versioned by build date, independently of AnsibleForms:
 An image only reaches AnsibleForms after it has been built, published and then tested inside the application:
 
 1. A pull request builds the image without publishing it.
-2. A merge to `main` that changes the image builds it again and publishes it to ghcr.io. A rebuild can also
-   be started by hand: Actions, Build, Run workflow.
-3. The AnsibleForms `Dockerfile` pins `base-server` by digest, so a new build changes nothing on its own.
-   Dependabot in [ansibleforms/ansibleforms](https://github.com/ansibleforms/ansibleforms) opens a pull request
-   that moves the pin, where the application is built and tested on the new base before it is released.
+2. A merge to `main` that changes the image publishes it to ghcr.io; Actions › Build › Run workflow rebuilds it.
+3. [AnsibleForms](https://github.com/ansibleforms/ansibleforms) pins `base-server` by digest; a Dependabot PR there moves the pin and tests the app on it.
 
 ## Contributing
 
-Contributions are welcome, for example a Python library or an Ansible collection added to an image's `Dockerfile`. Start with these files:
+Contributions are welcome. Start with these files:
 
 - [CONTRIBUTING.md](CONTRIBUTING.md): how to change an image and open a pull request against `main`
 - [SECURITY.md](SECURITY.md): how to report a security issue
